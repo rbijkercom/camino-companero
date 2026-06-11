@@ -1502,7 +1502,7 @@
   <div class="boeken-groepen" id="boekenGroepen">
     <p style="text-align:center;opacity:0.6;">Beschikbaarheid laden…</p>
   </div>
-  <p class="boeken-melding">Een training gaat definitief door zodra het minimum aantal deelnemers is bereikt — je krijgt daarvan altijd persoonlijk bericht. Demo-versie: boekingen in deze voorvertoning zijn ter test en gegevens zijn zichtbaar binnen deze demo.</p>
+  <p class="boeken-melding">Een training gaat definitief door zodra het minimum aantal deelnemers is bereikt — je krijgt daarvan altijd persoonlijk bericht.</p>
 </section>
 
 <!-- CONTACT -->
@@ -1634,52 +1634,16 @@
   ['2027-03-06','2027-03-20','2027-04-03','2027-04-17','2027-05-01','2027-05-15'].forEach(dt =>
     SESSIES.push({ id: 'pl-' + dt, type: 'plata', datum: dt }));
 
-  const STORAGE_KEY = 'cc-boekingen';
-  let boekingen = {};
   let openFormulier = null;
   let dagLimiet = 5;
 
   const fmt = new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
 
-  function aantal(sessieId) {
-    return (boekingen[sessieId] || []).length;
-  }
-
-  async function laadBoekingen() {
-    try {
-      const res = await window.storage.get(STORAGE_KEY, true);
-      boekingen = res ? JSON.parse(res.value) : {};
-    } catch (e) {
-      boekingen = {};
-    }
-  }
-
-  async function bewaarBoekingen() {
-    try {
-      await window.storage.set(STORAGE_KEY, JSON.stringify(boekingen), true);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function statusVan(s) {
-    const t = TYPES[s.type];
-    const n = aantal(s.id);
-    if (n >= t.max) return { cls: 'status-vol', txt: 'Vol — ' + t.max + ' van ' + t.max + ' plekken bezet', vol: true };
-    if (n >= t.min) return { cls: 'status-doorgang', txt: 'Gaat door! Nog ' + (t.max - n) + ' ' + (t.max - n === 1 ? 'plek' : 'plekken') + ' vrij', vol: false };
-    const nodig = t.min - n;
-    return { cls: 'status-open', txt: n + ' van ' + t.max + ' geboekt — nog ' + nodig + ' ' + (nodig === 1 ? 'aanmelding' : 'aanmeldingen') + ' nodig voor doorgang', vol: false };
-  }
+  const TRAINING_OPT = { dag: 'gear-go-dag', weekend: 'weekend', frances: 'on-camino', plata: 'on-camino' };
 
   function render() {
     const container = document.getElementById('boekenGroepen');
     if (!container) return;
-
-    if (typeof window.storage === 'undefined') {
-      container.innerHTML = '<p style="text-align:center;opacity:0.75;">Online boeken komt binnenkort beschikbaar. Gebruik voorlopig het contactformulier hieronder om je aan te melden — je hoort binnen twee dagen van me.</p>';
-      return;
-    }
 
     container.innerHTML = '';
     const volgorde = ['dag', 'weekend', 'frances', 'plata'];
@@ -1698,15 +1662,14 @@
       const zichtbaar = (type === 'dag') ? lijst.slice(0, dagLimiet) : lijst;
 
       zichtbaar.forEach(s => {
-        const st = statusVan(s);
         const rij = document.createElement('div');
         rij.className = 'sessie';
         const isOpen = openFormulier === s.id;
         rij.innerHTML =
           '<div class="sessie-datum">' + fmt.format(new Date(s.datum)) + '</div>' +
-          '<div class="sessie-status ' + st.cls + '">' + st.txt + '</div>' +
-          '<button class="sessie-boek-btn" data-id="' + s.id + '"' + (st.vol ? ' disabled' : '') + '>' +
-          (st.vol ? 'Vol' : (isOpen ? 'Sluit' : 'Boek')) + '</button>' +
+          '<div class="sessie-status status-open">Open voor inschrijving</div>' +
+          '<button class="sessie-boek-btn" data-id="' + s.id + '">' +
+          (isOpen ? 'Sluit' : 'Boek') + '</button>' +
           (isOpen ? '<div class="boek-formulier">' +
             '<input type="text" id="bn-' + s.id + '" placeholder="Je naam">' +
             '<input type="email" id="be-' + s.id + '" placeholder="Je e-mailadres">' +
@@ -1737,7 +1700,7 @@
     });
 
     container.querySelectorAll('[data-bevestig]').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-bevestig');
         const naam = document.getElementById('bn-' + id).value.trim();
         const email = document.getElementById('be-' + id).value.trim();
@@ -1747,40 +1710,29 @@
         }
         const s = SESSIES.find(x => x.id === id);
         const t = TYPES[s.type];
-        await laadBoekingen();
-        if (aantal(id) >= t.max) {
-          alert('Helaas — deze datum is net volgeboekt.');
-          openFormulier = null;
-          render();
-          return;
+        const datumTekst = fmt.format(new Date(s.datum));
+        const naamEl = document.getElementById('naam');
+        const emailEl = document.getElementById('email');
+        const trainingEl = document.getElementById('training');
+        const berichtEl = document.getElementById('bericht');
+        if (naamEl) naamEl.value = naam;
+        if (emailEl) emailEl.value = email;
+        if (trainingEl && TRAINING_OPT[s.type]) trainingEl.value = TRAINING_OPT[s.type];
+        if (berichtEl) {
+          berichtEl.value = 'Ik wil me inschrijven voor ' + t.naam + ' op ' + datumTekst + '.';
         }
-        if (!boekingen[id]) boekingen[id] = [];
-        boekingen[id].push({ naam: naam, email: email, ts: Date.now() });
-        const gelukt = await bewaarBoekingen();
         openFormulier = null;
         render();
-        if (gelukt) {
-          const st = statusVan(s);
-          alert('Bedankt ' + naam.split(' ')[0] + '! Je staat genoteerd voor ' + fmt.format(new Date(s.datum)) + '. ' +
-            (aantal(id) >= t.min ? 'Deze training gaat door!' : 'Zodra het minimum aantal deelnemers is bereikt, krijg je bericht dat de training doorgaat.'));
-        } else {
-          alert('Er ging iets mis bij het opslaan. Probeer het opnieuw of gebruik het contactformulier.');
-        }
+        document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+        if (naamEl) naamEl.focus();
       });
     });
   }
 
-  async function init() {
-    if (typeof window.storage !== 'undefined') {
-      await laadBoekingen();
-    }
-    render();
-  }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', render);
   } else {
-    init();
+    render();
   }
 })();
 </script>
