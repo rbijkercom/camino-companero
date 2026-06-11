@@ -13,7 +13,7 @@ Website voor Camino Compañero — begeleide voorbereiding op de Camino de Santi
 
 ## Nog te doen voor livegang
 - [ ] Domein caminocompanero.nl registreren en koppelen (Settings → Pages → Custom domain)
-- [ ] Mailbox edwin@caminocompanero.nl aanmaken
+- [ ] Mailbox edwinknoth@gmail.com gebruiken of edwin@caminocompanero.nl aanmaken
 - [ ] Contactformulier activeren (eerste inzending via formsubmit.co bevestigen)
 - [ ] Boekingssectie koppelen aan boekingsdienst (bijv. SuperSaaS) — toont nu automatisch een verwijzing naar het contactformulier
 - [ ] KvK-nummer invullen in de footer
