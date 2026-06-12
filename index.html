@@ -1241,6 +1241,43 @@
       opacity: 0.6;
     }
 
+    /* === ROUTES === */
+    .routes-section {
+      background: var(--paper);
+      padding: 8rem 2.5rem;
+      border-top: 1px solid rgba(42, 37, 32, 0.08);
+      scroll-margin-top: 5rem;
+    }
+
+    .routes-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .routes-iframe {
+      width: 100%;
+      height: 1040px;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 30px rgba(42, 37, 32, 0.08);
+      background: var(--paper);
+    }
+
+    @media (max-width: 880px) {
+      .routes-iframe {
+        height: 1480px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .routes-section {
+        padding: 5rem 1.5rem;
+      }
+      .routes-iframe {
+        height: 1580px;
+      }
+    }
+
     /* === RESPONSIVE === */
     @media (max-width: 768px) {
       nav {
@@ -1343,6 +1380,7 @@
       <li><a href="#filosofie">Filosofie</a></li>
       <li><a href="#over">Over Edwin</a></li>
       <li><a href="#agenda">Agenda</a></li>
+      <li><a href="#routes">Routes</a></li>
       <li><a href="#boeken">Boeken</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
@@ -1647,6 +1685,17 @@
       plaats.</p>
   </section>
 
+  <!-- CAMINO-ROUTES -->
+  <section class="routes-section" id="routes">
+    <div class="section-header">
+      <span class="section-eyebrow">— Interactieve routekaart —</span>
+      <h2>Welke Camino <em>past bij jou?</em></h2>
+    </div>
+    <div class="routes-container">
+      <iframe src="camino_routes_kaart.html" class="routes-iframe" title="Interactieve Camino Routes Kaart"></iframe>
+    </div>
+  </section>
+
   <!-- BOEKEN -->
   <section class="boeken" id="boeken">
     <div class="section-header">
@@ -1738,6 +1787,7 @@
         <ul>
           <li><a href="#over">Over Edwin</a></li>
           <li><a href="#agenda">Agenda</a></li>
+          <li><a href="#routes">Routes</a></li>
           <li><a href="#">Veelgestelde vragen</a></li>
           <li><a href="#">Algemene voorwaarden</a></li>
         </ul>
