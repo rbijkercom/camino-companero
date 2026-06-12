@@ -124,6 +124,12 @@
       justify-content: center;
       align-items: center;
       -webkit-tap-highlight-color: transparent;
+      outline: none;
+    }
+
+    .burger-menu:focus-visible {
+      outline: 2px solid var(--terracotta);
+      outline-offset: 2px;
     }
 
     .burger-menu span {
@@ -1767,7 +1773,8 @@
         position: fixed;
         top: 0;
         right: 0;
-        bottom: 0;
+        height: 100vh;
+        height: 100dvh;
         width: 100%;
         max-width: 300px;
         background: var(--paper);
@@ -1779,6 +1786,8 @@
         transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         border-left: 1px solid rgba(42, 37, 32, 0.08);
         visibility: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
 
       .nav-links.active {
