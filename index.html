@@ -109,6 +109,61 @@
       color: var(--terracotta);
     }
 
+    /* === BURGER MENU & OVERLAY === */
+    .burger-menu {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      z-index: 101;
+      flex-direction: column;
+      gap: 5px;
+      width: 32px;
+      height: 32px;
+      justify-content: center;
+      align-items: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .burger-menu span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background-color: var(--ink);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      border-radius: 2px;
+    }
+
+    .burger-menu.active span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .burger-menu.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .burger-menu.active span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .nav-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(42, 37, 32, 0.35);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 98;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .nav-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     /* === HERO === */
     .hero {
       height: 100vh;
@@ -1247,34 +1302,451 @@
       padding: 8rem 2.5rem;
       border-top: 1px solid rgba(42, 37, 32, 0.08);
       scroll-margin-top: 5rem;
+      --map-bone: #F2ECDF;
+      --map-paper: #E7DCC4;
+      --map-paper-edge: #CFC0A0;
+      --map-sea: #ECE4D2;
+      --map-ink: #3A332B;
+      --map-ink-soft: #6B6253;
+      --map-terra: #C66A3D;
+      --map-line: #DAD0BC;
     }
 
     .routes-container {
-      max-width: 1200px;
+      max-width: 1180px;
       margin: 0 auto;
     }
 
-    .routes-iframe {
+    .routes-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 22px 0 18px;
+      justify-content: center;
+    }
+
+    .routes-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      border: 1px solid var(--map-line);
+      background: #fff8ec;
+      color: var(--map-ink);
+      font-family: 'Inter', sans-serif;
+      font-size: .86rem;
+      font-weight: 500;
+      padding: 7px 13px 7px 11px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: .18s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .routes-chip:hover {
+      border-color: var(--map-paper-edge);
+      transform: translateY(-1px);
+    }
+
+    .routes-chip .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .routes-chip.core::after {
+      content: "●";
+      font-size: .5rem;
+      color: var(--map-terra);
+      margin-left: 1px;
+      transform: translateY(-1px);
+    }
+
+    .routes-chip[aria-pressed="true"] {
+      background: var(--map-ink);
+      color: var(--map-bone);
+      border-color: var(--map-ink);
+    }
+
+    .routes-chip.reset {
+      background: transparent;
+      color: var(--map-ink-soft);
+    }
+
+    .routes-chip.reset[aria-pressed="true"] {
+      background: var(--map-ink);
+      color: var(--map-bone);
+    }
+
+    .routes-stage {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .routes-mapcard {
+      position: relative;
+      background: var(--map-sea);
+      border: 1px solid var(--map-line);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 0 #fff inset, 0 14px 34px -22px rgba(58,51,43,.5);
+    }
+
+    .routes-grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .5;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+    }
+
+    svg.routes-map {
+      display: block;
       width: 100%;
-      height: 1040px;
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 30px rgba(42, 37, 32, 0.08);
-      background: var(--paper);
+      height: auto;
+    }
+
+    .routes-section .land {
+      stroke-linejoin: round;
+    }
+
+    .routes-section .land-ctx {
+      fill: #E0D6BE;
+      stroke: #D3C7AB;
+      stroke-width: .8;
+      opacity: .55;
+    }
+
+    .routes-section .land-main {
+      fill: var(--map-paper);
+      stroke: var(--map-paper-edge);
+      stroke-width: 1;
+      opacity: 0;
+      animation: routesLandIn .9s ease forwards;
+    }
+
+    @keyframes routesLandIn {
+      to { opacity: 1; }
+    }
+
+    @keyframes routesDraw {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .routes-section .route {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      cursor: pointer;
+      stroke-width: 3;
+      transition: opacity .3s, stroke-width .2s;
+    }
+
+    .routes-section .route.core {
+      stroke-width: 4;
+    }
+
+    .routes-section .route-hit {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 18;
+      cursor: pointer;
+    }
+
+    .routes-section .dimmed {
+      opacity: .16;
+    }
+
+    .routes-section .faded .route {
+      opacity: .16;
+    }
+
+    .routes-section .faded .route.active {
+      opacity: 1;
+    }
+
+    .routes-section .stop {
+      fill: #fff;
+      stroke-width: 1.4;
+      opacity: 0;
+      transition: opacity .3s;
+      pointer-events: none;
+    }
+
+    .routes-section .stop.show {
+      opacity: 1;
+    }
+
+    .routes-section .endcap {
+      fill: var(--map-bone);
+      stroke-width: 2.2;
+    }
+
+    .routes-section .lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      fill: var(--map-ink);
+      paint-order: stroke;
+      stroke: var(--map-bone);
+      stroke-width: 3.2px;
+      stroke-linejoin: round;
+      opacity: 0;
+      transition: opacity .3s;
+      pointer-events: none;
+    }
+
+    .routes-section .lbl.show {
+      opacity: 1;
+    }
+
+    .routes-section .santiago-star {
+      fill: var(--map-terra);
+      stroke: var(--map-bone);
+      stroke-width: 1.4;
+    }
+
+    .routes-section .santiago-pulse {
+      fill: var(--map-terra);
+      opacity: .25;
+      transform-origin: center;
+      animation: routesPulse 2.8s ease-out infinite;
+    }
+
+    @keyframes routesPulse {
+      0% { r: 6; opacity: .4; }
+      70% { r: 20; opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    .routes-section .santiago-lbl {
+      font-family: 'Fraunces', serif;
+      font-size: 15px;
+      font-weight: 600;
+      fill: var(--map-ink);
+      paint-order: stroke;
+      stroke: var(--map-bone);
+      stroke-width: 3.6px;
+    }
+
+    .routes-panel {
+      background: #fff8ec;
+      border: 1px solid var(--map-line);
+      border-radius: 14px;
+      padding: 22px 22px 20px;
+      position: sticky;
+      top: 90px;
+      min-height: 200px;
+      align-self: start;
+    }
+
+    .routes-panel .ph {
+      color: var(--map-ink-soft);
+    }
+
+    .routes-panel .ph h2 {
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      font-size: 1.25rem;
+      margin: 0 0 8px;
+    }
+
+    .routes-panel .r-name {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 1.5rem;
+      margin: 0;
+      line-height: 1.1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .routes-panel .r-name .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .routes-panel .r-core {
+      display: inline-block;
+      margin-top: 9px;
+      font-size: .7rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--map-terra);
+      border: 1px solid var(--map-terra);
+      border-radius: 999px;
+      padding: 3px 9px;
+    }
+
+    .routes-panel .badges {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--map-line);
+      border: 1px solid var(--map-line);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .routes-panel .badge {
+      background: #fffdf6;
+      padding: 10px 12px;
+    }
+
+    .routes-panel .badge .k {
+      font-size: .66rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--map-ink-soft);
+      font-weight: 600;
+    }
+
+    .routes-panel .badge .v {
+      font-size: .96rem;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .routes-panel .r-desc {
+      color: var(--map-ink-soft);
+      font-size: .94rem;
+      margin: 14px 0 0;
+    }
+
+    .routes-panel .sec-h {
+      font-size: .7rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--map-ink-soft);
+      font-weight: 600;
+      margin: 18px 0 9px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .routes-panel .sec-h::after {
+      content: "";
+      height: 1px;
+      background: var(--map-line);
+      flex: 1;
+    }
+
+    .routes-panel .feats {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .routes-panel .feats li {
+      position: relative;
+      padding: 5px 0 5px 20px;
+      font-size: .9rem;
+    }
+
+    .routes-panel .feats li::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 12px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--map-terra);
+    }
+
+    .routes-panel .stops-wrap {
+      margin-top: 4px;
+    }
+
+    .routes-panel .stops {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      columns: 2;
+      column-gap: 18px;
+      font-size: .83rem;
+      color: var(--map-ink-soft);
+    }
+
+    .routes-panel .stops li {
+      position: relative;
+      padding: 3px 0 3px 14px;
+      break-inside: avoid;
+    }
+
+    .routes-panel .stops li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 11px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--map-paper-edge);
+    }
+
+    .routes-panel .stops li.term {
+      color: var(--map-ink);
+      font-weight: 600;
+    }
+
+    .routes-panel .stops li.term::before {
+      background: var(--map-terra);
+    }
+
+    .routes-panel .count {
+      font-weight: 400;
+      color: var(--map-ink-soft);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .routes-foot {
+      margin-top: 26px;
+      font-size: .8rem;
+      color: var(--map-ink-soft);
+      max-width: 70ch;
+    }
+
+    .routes-foot a {
+      color: var(--map-terra);
     }
 
     @media (max-width: 880px) {
-      .routes-iframe {
-        height: 1480px;
+      .routes-stage {
+        grid-template-columns: 1fr;
+      }
+      .routes-panel {
+        position: static;
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .routes-section .land-main {
+        animation: none;
+        opacity: 1;
+      }
+      .routes-section .santiago-pulse {
+        animation: none;
+        opacity: 0;
+      }
+      .routes-section .route {
+        transition: opacity .2s;
       }
     }
 
     @media (max-width: 480px) {
       .routes-section {
         padding: 5rem 1.5rem;
-      }
-      .routes-iframe {
-        height: 1580px;
       }
     }
 
@@ -1284,8 +1756,46 @@
         padding: 1rem 1.5rem;
       }
 
+      .burger-menu {
+        display: flex;
+      }
+
       .nav-links {
-        display: none;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: 300px;
+        background: var(--paper);
+        padding: 6rem 2rem 2rem;
+        box-shadow: -10px 0 30px rgba(42, 37, 32, 0.05);
+        gap: 1.5rem;
+        z-index: 99;
+        transform: translateX(100%);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        border-left: 1px solid rgba(42, 37, 32, 0.08);
+        visibility: hidden;
+      }
+
+      .nav-links.active {
+        transform: translateX(0);
+        visibility: visible;
+      }
+
+      .nav-links li {
+        width: 100%;
+      }
+
+      .nav-links a {
+        display: block;
+        padding: 0.5rem 0;
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        border-bottom: 1px solid rgba(42, 37, 32, 0.04);
       }
 
       .hero-content {
@@ -1373,18 +1883,25 @@
 
 <body>
 
+  <!-- Navigation Backdrop Overlay -->
+  <div class="nav-overlay" id="navOverlay"></div>
+
   <nav>
     <div class="logo">Camino <em>Compañero</em></div>
-    <ul class="nav-links">
+    <ul class="nav-links" id="nav-links">
       <li><a href="#trainingen">Trainingen</a></li>
       <li><a href="#filosofie">Filosofie</a></li>
-      <li><a href="camino-routes.html">Routes</a></li>
       <li><a href="#over">Over Edwin</a></li>
       <li><a href="#agenda">Agenda</a></li>
       <li><a href="#routes">Routes</a></li>
       <li><a href="#boeken">Boeken</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
+    <button class="burger-menu" aria-label="Menu openen" aria-expanded="false" aria-controls="nav-links">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </nav>
 
   <!-- HERO -->
@@ -1938,10 +2455,48 @@
         });
       }
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', render);
-      } else {
+      // Mobile burger menu logic
+      function initBurgerMenu() {
+        const burgerMenu = document.querySelector('.burger-menu');
+        const navLinks = document.querySelector('.nav-links');
+        const navOverlay = document.getElementById('navOverlay');
+
+        if (!burgerMenu || !navLinks || !navOverlay) return;
+
+        function toggleMenu() {
+          const isOpen = burgerMenu.classList.toggle('active');
+          navLinks.classList.toggle('active');
+          navOverlay.classList.toggle('active');
+          burgerMenu.setAttribute('aria-expanded', isOpen);
+          document.body.style.overflow = isOpen ? 'hidden' : '';
+        }
+
+        function closeMenu() {
+          burgerMenu.classList.remove('active');
+          navLinks.classList.remove('active');
+          navOverlay.classList.remove('active');
+          burgerMenu.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        }
+
+        burgerMenu.addEventListener('click', toggleMenu);
+        navOverlay.addEventListener('click', closeMenu);
+
+        // Close menu when a link inside the menu is clicked
+        navLinks.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', closeMenu);
+        });
+      }
+
+      function init() {
         render();
+        initBurgerMenu();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
       }
     })();
   </script>
